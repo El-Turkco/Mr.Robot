@@ -1,0 +1,21 @@
+Mr.Robot CTF Çözümü
+    İlk olarak vulnhub dan mr.robot indirdim.nmap "10.0.2.15/24 -T4 -sn"  çalıştırarak hedefin ip addressini öğrendim.
+    daha sonra nmap "10.0.2.17 -T4 -A v" diyerek 80 portun açık olduğunu keşfettim.İnternete giderek web sayfasını buldum.
+    Web sitesinde bir adet terminal açılıyor. Verdiği koddları tek tek denedim herhangi bir ipuçu bulamadım daha sonra "robots.txt"
+    gittim ve "key-1-of-3.txt" ve "fsocity.dic" dosyalarını buldum. "key-1-of-3.txt" açınca flag1 buldum. "fsocity.dic" ise bir adet wordlist dosyası olduğunu anladım
+    dirbuster aracını kullandığımda hedef sitenin wordpress ile yapılmiş olduğunu anladım. Ve "10.0.2.17/wp-login/" giderek.login ekranranına ulaştım kullanıcı adı ve şifreyi 
+    "hydra" araçı ile brute force attack yaptım.Zaten brute force için "fsocity.dic" isimli dosya bulmuştum. 
+    "hydra -V -L fsocity.dic -p test 10.0.2.17 http-post-from '/wp-login.php:log=^USER^&pwd=^PASS^&wp-submit=Log+In:F=invalid=username' " en sondaki parametreleri 
+    Burp Suite araçı ile yakalayıp bir post isteği olduğunu ve bu parametreler ile gönderildiğini buldum.Bu yazdığım kodu sadece username bulmak için brute force
+    attack başlattım.Ve username buldum "Username:Elliot" Password bulmak için wp-scan aracını kulandım.
+    "wp-scan --url 10.0.2.17 --passwords fsocity.dic --usernames Elliot" ve böylece password buldum. Password:ER28-0652
+    Kullanıcı adı ve şifre  yazarak Dashboard giriş yaptım. Sistemdeki php dosyalarından bir tanesini php reverse shell dosyası ile değiştirdim. Ve daha sonra değiştirdiğim
+    dosyayı sunucuda çalıştırdığımda shell aldım.
+
+Root Olma Süreci
+    Sunucuda id komutu yazınca daemon diye bir kullanıcı olarak sunucuya giriş yapmıştım. "cd home " giderek "robot" diye bir dosya  oldunu gördüm. "cat robot" ve "ls" çalıştırdığımda 
+    key-2-of-3.txt ve password.raw-md5 dosylarını gördüm. key-2-of-3.txt  açmaya yetkim yoktu ancak  password.raw-md5 açınca md5 ile encript edilmiş bir password buldum.
+    ve bu kodu alıp decode ettim.Ve password buldum. Sunucuda "su robot" çalıştırdım ve password girerek robot kullanıcısı oldum. "ls" çalıştırarak key-2-of-3.txt dosyasını açtım 
+    ve flag2 yi aldım.Daha sonra "find / -perm -u=s -type f 2>/dev/null" komutunu yazdım.Bir çok seçenek içinden nmap çalıştırabildiğimi gördüm ve İnternete nmap command terminal interactive shell 
+    diye arama yaptım.Çıkan sonuçlardan "nmap --interactive" komutunu buldum. Bu kodu alıp direk sunucuda çalıştırdığımda "nmap> terminali geldi buraya !sh" çalıştırdığımda 
+    sunucuda root olmayı başardım.
